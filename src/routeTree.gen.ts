@@ -10,33 +10,90 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ServicesIndexRouteImport } from './routes/services.index'
+import { Route as ServicesAccountingRouteImport } from './routes/services.accounting'
+import { Route as ServicesFinancialServicesRouteImport } from './routes/services.financial-services'
+import { Route as ServicesTaxationRouteImport } from './routes/services.taxation'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesIndexRoute = ServicesIndexRouteImport.update({
+  id: '/services/',
+  path: '/services/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesAccountingRoute = ServicesAccountingRouteImport.update({
+  id: '/services/accounting',
+  path: '/services/accounting',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesFinancialServicesRoute =
+  ServicesFinancialServicesRouteImport.update({
+    id: '/services/financial-services',
+    path: '/services/financial-services',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ServicesTaxationRoute = ServicesTaxationRouteImport.update({
+  id: '/services/taxation',
+  path: '/services/taxation',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/services/accounting': typeof ServicesAccountingRoute
+  '/services/financial-services': typeof ServicesFinancialServicesRoute
+  '/services/taxation': typeof ServicesTaxationRoute
+  '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/services/accounting': typeof ServicesAccountingRoute
+  '/services/financial-services': typeof ServicesFinancialServicesRoute
+  '/services/taxation': typeof ServicesTaxationRoute
+  '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/services/accounting': typeof ServicesAccountingRoute
+  '/services/financial-services': typeof ServicesFinancialServicesRoute
+  '/services/taxation': typeof ServicesTaxationRoute
+  '/services/': typeof ServicesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/services/accounting'
+    | '/services/financial-services'
+    | '/services/taxation'
+    | '/services/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/services/accounting'
+    | '/services/financial-services'
+    | '/services/taxation'
+    | '/services'
+  id:
+    | '__root__'
+    | '/'
+    | '/services/accounting'
+    | '/services/financial-services'
+    | '/services/taxation'
+    | '/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ServicesAccountingRoute: typeof ServicesAccountingRoute
+  ServicesFinancialServicesRoute: typeof ServicesFinancialServicesRoute
+  ServicesTaxationRoute: typeof ServicesTaxationRoute
+  ServicesIndexRoute: typeof ServicesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +105,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services/': {
+      id: '/services/'
+      path: '/services'
+      fullPath: '/services/'
+      preLoaderRoute: typeof ServicesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/accounting': {
+      id: '/services/accounting'
+      path: '/services/accounting'
+      fullPath: '/services/accounting'
+      preLoaderRoute: typeof ServicesAccountingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/financial-services': {
+      id: '/services/financial-services'
+      path: '/services/financial-services'
+      fullPath: '/services/financial-services'
+      preLoaderRoute: typeof ServicesFinancialServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services/taxation': {
+      id: '/services/taxation'
+      path: '/services/taxation'
+      fullPath: '/services/taxation'
+      preLoaderRoute: typeof ServicesTaxationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ServicesAccountingRoute: ServicesAccountingRoute,
+  ServicesFinancialServicesRoute: ServicesFinancialServicesRoute,
+  ServicesTaxationRoute: ServicesTaxationRoute,
+  ServicesIndexRoute: ServicesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
