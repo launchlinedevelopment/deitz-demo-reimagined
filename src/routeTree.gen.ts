@@ -10,6 +10,12 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as QualificationsRouteImport } from './routes/qualifications'
+import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as TestimonialsRouteImport } from './routes/testimonials'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesAccountingRouteImport } from './routes/services.accounting'
 import { Route as ServicesFinancialServicesRouteImport } from './routes/services.financial-services'
@@ -18,6 +24,36 @@ import { Route as ServicesTaxationRouteImport } from './routes/services.taxation
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QualificationsRoute = QualificationsRouteImport.update({
+  id: '/qualifications',
+  path: '/qualifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TestimonialsRoute = TestimonialsRouteImport.update({
+  id: '/testimonials',
+  path: '/testimonials',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesIndexRoute = ServicesIndexRouteImport.update({
@@ -44,6 +80,12 @@ const ServicesTaxationRoute = ServicesTaxationRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/privacy': typeof PrivacyRoute
+  '/qualifications': typeof QualificationsRoute
+  '/resources': typeof ResourcesRoute
+  '/testimonials': typeof TestimonialsRoute
   '/services/accounting': typeof ServicesAccountingRoute
   '/services/financial-services': typeof ServicesFinancialServicesRoute
   '/services/taxation': typeof ServicesTaxationRoute
@@ -51,6 +93,12 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/privacy': typeof PrivacyRoute
+  '/qualifications': typeof QualificationsRoute
+  '/resources': typeof ResourcesRoute
+  '/testimonials': typeof TestimonialsRoute
   '/services/accounting': typeof ServicesAccountingRoute
   '/services/financial-services': typeof ServicesFinancialServicesRoute
   '/services/taxation': typeof ServicesTaxationRoute
@@ -59,6 +107,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
+  '/privacy': typeof PrivacyRoute
+  '/qualifications': typeof QualificationsRoute
+  '/resources': typeof ResourcesRoute
+  '/testimonials': typeof TestimonialsRoute
   '/services/accounting': typeof ServicesAccountingRoute
   '/services/financial-services': typeof ServicesFinancialServicesRoute
   '/services/taxation': typeof ServicesTaxationRoute
@@ -68,6 +122,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
+    | '/contact'
+    | '/privacy'
+    | '/qualifications'
+    | '/resources'
+    | '/testimonials'
     | '/services/accounting'
     | '/services/financial-services'
     | '/services/taxation'
@@ -75,6 +135,12 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/contact'
+    | '/privacy'
+    | '/qualifications'
+    | '/resources'
+    | '/testimonials'
     | '/services/accounting'
     | '/services/financial-services'
     | '/services/taxation'
@@ -82,6 +148,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/about'
+    | '/contact'
+    | '/privacy'
+    | '/qualifications'
+    | '/resources'
+    | '/testimonials'
     | '/services/accounting'
     | '/services/financial-services'
     | '/services/taxation'
@@ -90,6 +162,12 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  ContactRoute: typeof ContactRoute
+  PrivacyRoute: typeof PrivacyRoute
+  QualificationsRoute: typeof QualificationsRoute
+  ResourcesRoute: typeof ResourcesRoute
+  TestimonialsRoute: typeof TestimonialsRoute
   ServicesAccountingRoute: typeof ServicesAccountingRoute
   ServicesFinancialServicesRoute: typeof ServicesFinancialServicesRoute
   ServicesTaxationRoute: typeof ServicesTaxationRoute
@@ -103,6 +181,48 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/qualifications': {
+      id: '/qualifications'
+      path: '/qualifications'
+      fullPath: '/qualifications'
+      preLoaderRoute: typeof QualificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/testimonials': {
+      id: '/testimonials'
+      path: '/testimonials'
+      fullPath: '/testimonials'
+      preLoaderRoute: typeof TestimonialsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services/': {
@@ -138,6 +258,12 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  ContactRoute: ContactRoute,
+  PrivacyRoute: PrivacyRoute,
+  QualificationsRoute: QualificationsRoute,
+  ResourcesRoute: ResourcesRoute,
+  TestimonialsRoute: TestimonialsRoute,
   ServicesAccountingRoute: ServicesAccountingRoute,
   ServicesFinancialServicesRoute: ServicesFinancialServicesRoute,
   ServicesTaxationRoute: ServicesTaxationRoute,
