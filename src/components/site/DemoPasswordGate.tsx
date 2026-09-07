@@ -24,8 +24,8 @@ export function DemoPasswordGate() {
         </span>
         <h2 className="mt-5 text-2xl">Private Demo Access</h2>
         <p className="mt-3 text-[0.98rem] text-muted-foreground">
-          This feature is part of a private website redesign concept created by Launchline
-          Development. Enter the demo password to continue.
+          This entire site is a private website redesign concept created by Launchline Development.
+          Enter the demo password to view it.
         </p>
 
         <form onSubmit={onSubmit} noValidate className="mt-7 space-y-3">
