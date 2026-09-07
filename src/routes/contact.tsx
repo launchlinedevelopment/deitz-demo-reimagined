@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useDemoAccess } from "@/lib/demo-access";
-import { DemoPasswordGate } from "@/components/site/DemoPasswordGate";
 import { ContactExperience } from "@/components/site/ContactExperience";
 import { PageHero } from "@/components/site/PageHero";
 
@@ -27,8 +25,6 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
-  const { unlocked, ready } = useDemoAccess();
-
   return (
     <>
       <PageHero
@@ -36,7 +32,7 @@ function ContactPage() {
         title="Let's Talk About Your Financial Goals"
         intro="Whether you need help with taxes, accounting, business planning, or long-term financial strategy, Simon & Deitz LLC is here to help."
       />
-      {!ready ? <div className="section-y" aria-hidden="true" /> : unlocked ? <ContactExperience /> : <DemoPasswordGate />}
+      <ContactExperience />
     </>
   );
 }

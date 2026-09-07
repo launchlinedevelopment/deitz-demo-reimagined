@@ -14,7 +14,8 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { DemoBanner, DemoWatermark } from "@/components/site/DemoChrome";
-import { DemoAccessProvider } from "@/lib/demo-access";
+import { DemoAccessProvider, useDemoAccess } from "@/lib/demo-access";
+import { DemoPasswordGate } from "@/components/site/DemoPasswordGate";
 
 function NotFoundComponent() {
   return (
@@ -109,26 +110,58 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function SiteGate() {
+  const { unlocked, ready } = useDemoAccess();
+
+  if (!ready) {
+    return (
+      <>
+        <DemoBanner />
+        <main id="main" className="section-y" aria-hidden="true" />
+        <DemoWatermark />
+      </>
+    );
+  }
+
+  if (!unlocked) {
+    return (
+      <>
+        <DemoBanner />
+        <main id="main">
+          <DemoPasswordGate />
+        </main>
+        <DemoWatermark />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      >
+        Skip to main content
+      </a>
+      <DemoBanner />
+      <SiteHeader />
+      <main id="main">
+        {/* Required: nested routes render here. */}
+        <Outlet />
+      </main>
+      <SiteFooter />
+      <DemoWatermark />
+    </>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
   return (
     <QueryClientProvider client={queryClient}>
       <DemoAccessProvider>
-        <a
-          href="#main"
-          className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-[60] focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
-        >
-          Skip to main content
-        </a>
-        <DemoBanner />
-        <SiteHeader />
-        <main id="main">
-          {/* Required: nested routes render here. */}
-          <Outlet />
-        </main>
-        <SiteFooter />
-        <DemoWatermark />
+        <SiteGate />
       </DemoAccessProvider>
     </QueryClientProvider>
   );
