@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Mail, MapPin, Phone, Printer } from "lucide-react";
 import { firm } from "@/lib/firm";
+import { submitContactMessage } from "@/lib/contact.functions";
 import { DemoEnvironmentLabel } from "./DemoChrome";
 
 type Fields = {
@@ -29,16 +31,19 @@ function validate(fields: Fields) {
 }
 
 export function ContactExperience() {
+  const send = useServerFn(submitContactMessage);
   const [fields, setFields] = useState<Fields>(emptyFields);
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   function update<K extends keyof Fields>(key: K, value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = validate(fields);
     setErrors(next);
@@ -47,9 +52,17 @@ export function ContactExperience() {
       first?.focus();
       return;
     }
-    // Demo only: nothing is transmitted or stored.
-    setFields(emptyFields);
-    setSubmitted(true);
+    setSending(true);
+    setSendError("");
+    try {
+      await send({ data: fields });
+      setFields(emptyFields);
+      setSubmitted(true);
+    } catch {
+      setSendError("We couldn't send your message just now. Please try again.");
+    } finally {
+      setSending(false);
+    }
   }
 
   if (submitted) {
