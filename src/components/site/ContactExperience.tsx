@@ -1,7 +1,9 @@
 import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, Mail, MapPin, Phone, Printer } from "lucide-react";
 import { firm } from "@/lib/firm";
+import { submitContactMessage } from "@/lib/contact.functions";
 import { DemoEnvironmentLabel } from "./DemoChrome";
 
 type Fields = {
@@ -29,16 +31,19 @@ function validate(fields: Fields) {
 }
 
 export function ContactExperience() {
+  const send = useServerFn(submitContactMessage);
   const [fields, setFields] = useState<Fields>(emptyFields);
   const [errors, setErrors] = useState<Partial<Record<keyof Fields, string>>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   function update<K extends keyof Fields>(key: K, value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = validate(fields);
     setErrors(next);
@@ -47,9 +52,17 @@ export function ContactExperience() {
       first?.focus();
       return;
     }
-    // Demo only: nothing is transmitted or stored.
-    setFields(emptyFields);
-    setSubmitted(true);
+    setSending(true);
+    setSendError("");
+    try {
+      await send({ data: fields });
+      setFields(emptyFields);
+      setSubmitted(true);
+    } catch {
+      setSendError("We couldn't send your message just now. Please try again.");
+    } finally {
+      setSending(false);
+    }
   }
 
   if (submitted) {
@@ -60,13 +73,13 @@ export function ContactExperience() {
             <CheckCircle2 aria-hidden="true" className="h-7 w-7 text-gold" />
           </span>
           <h2 className="mt-6 text-2xl" role="status">
-            Demo Submission Successful
+            Your Inquiry Has Been Received
           </h2>
           <p className="mt-4 text-muted-foreground">
-            On the live website, this inquiry would be securely delivered to the business.
+            Your message has been delivered to the firm's private message inbox.
           </p>
           <p className="mt-3 font-medium text-navy-deep">
-            This demonstration did not transmit your information.
+            A member of the firm can review and respond to it from the administration area.
           </p>
           <Link to="/" className="btn-primary mt-8">
             Return to Website
@@ -85,8 +98,8 @@ export function ContactExperience() {
         <DemoEnvironmentLabel />
         <h2 className="mt-6 text-3xl md:text-4xl">Request a Consultation</h2>
         <p className="mt-4 max-w-xl text-muted-foreground">
-          Tell us a little about what you need. In this demonstration nothing is sent, emailed, or
-          stored — the form is here to show how the live experience would work.
+          Tell us a little about what you need. Your message is saved securely and appears in the
+          firm's private message inbox.
         </p>
 
         <form onSubmit={onSubmit} noValidate className="mt-9 space-y-6">
@@ -161,8 +174,14 @@ export function ContactExperience() {
             />
           </Field>
 
-          <button type="submit" className="btn-primary w-full sm:w-auto">
-            Send Inquiry
+          {sendError && (
+            <p role="alert" className="text-sm font-medium text-destructive">
+              {sendError}
+            </p>
+          )}
+
+          <button type="submit" className="btn-primary w-full sm:w-auto" disabled={sending}>
+            {sending ? "Sending…" : "Send Inquiry"}
           </button>
         </form>
       </div>
