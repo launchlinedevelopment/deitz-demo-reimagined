@@ -1,8 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession } from "@tanstack/react-start/server";
-import { createHash, timingSafeEqual } from "node:crypto";
-
-type AdminSession = { unlocked?: boolean };
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 /**
  * Demo defaults so the project also runs from a plain GitHub clone with no
@@ -11,18 +8,28 @@ type AdminSession = { unlocked?: boolean };
 const DEFAULT_ADMIN_PASSWORD = "Launchline2026!";
 const DEFAULT_SESSION_SECRET = "launchline-demo-session-secret-key-32chars";
 
-function sessionConfig() {
-  return {
-    password: process.env["SESSION_SECRET"] || DEFAULT_SESSION_SECRET,
-    name: "sd-admin",
-    maxAge: 60 * 60 * 8,
-    cookie: {
-      httpOnly: true,
-      secure: process.env["NODE_ENV"] === "production",
-      sameSite: "lax" as const,
-      path: "/",
-    },
-  };
+const TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+
+function secret() {
+  return process.env["SESSION_SECRET"] || DEFAULT_SESSION_SECRET;
+}
+
+function sign(payload: string) {
+  return createHmac("sha256", secret()).update(payload).digest("hex");
+}
+
+function issueToken() {
+  const payload = String(Date.now() + TOKEN_TTL_MS);
+  return `${payload}.${sign(payload)}`;
+}
+
+function verifyToken(token: string) {
+  const [payload, signature] = String(token ?? "").split(".");
+  if (!payload || !signature) return false;
+  const expected = sign(payload);
+  if (signature.length !== expected.length) return false;
+  if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+  return Number(payload) > Date.now();
 }
 
 function matches(input: string, expected: string) {
@@ -31,10 +38,8 @@ function matches(input: string, expected: string) {
   return timingSafeEqual(a, b);
 }
 
-async function requireAdmin() {
-  const session = await useSession<AdminSession>(sessionConfig());
-  if (!session.data.unlocked) throw new Error("Unauthorized");
-  return session;
+function requireAdmin(token: string) {
+  if (!verifyToken(token)) throw new Error("Unauthorized");
 }
 
 export type ContactMessage = {
@@ -84,42 +89,36 @@ export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => ({ password: String(data?.password ?? "") }))
   .handler(async ({ data }) => {
     const expected = process.env["ADMIN_PASSWORD"] || DEFAULT_ADMIN_PASSWORD;
-    if (!data.password || !matches(data.password, expected)) return { ok: false as const };
-    const session = await useSession<AdminSession>(sessionConfig());
-    await session.update({ unlocked: true });
-    return { ok: true as const };
+    if (!data.password || !matches(data.password, expected)) return { ok: false as const, token: "" };
+    return { ok: true as const, token: issueToken() };
   });
 
-export const adminLogout = createServerFn({ method: "POST" }).handler(async () => {
-  const session = await useSession<AdminSession>(sessionConfig());
-  await session.clear();
-  return { ok: true as const };
-});
+export const adminStatus = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => ({ unlocked: verifyToken(data.token) }));
 
-export const adminStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await useSession<AdminSession>(sessionConfig());
-  return { unlocked: session.data.unlocked === true };
-});
-
-export const listContactMessages = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("contact_messages")
-    .select("id, name, email, phone, service, message, is_read, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw new Error("Could not load messages.");
-  return (data ?? []) as ContactMessage[];
-});
+export const listContactMessages = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => {
+    requireAdmin(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("contact_messages")
+      .select("id, name, email, phone, service, message, is_read, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error("Could not load messages.");
+    return (rows ?? []) as ContactMessage[];
+  });
 
 export const setMessageRead = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string; isRead: boolean }) => ({
+  .inputValidator((data: { token: string; id: string; isRead: boolean }) => ({
+    token: String(data?.token ?? ""),
     id: String(data?.id ?? ""),
     isRead: Boolean(data?.isRead),
   }))
   .handler(async ({ data }) => {
-    await requireAdmin();
+    requireAdmin(data.token);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("contact_messages")
