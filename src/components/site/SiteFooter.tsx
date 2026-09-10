@@ -57,6 +57,11 @@ export function SiteFooter() {
                 Privacy Policy
               </Link>
             </li>
+            <li>
+              <Link to="/admin" className="transition-colors hover:text-gold">
+                Admin Inbox
+              </Link>
+            </li>
           </ul>
         </div>
       </div>
