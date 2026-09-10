@@ -1,8 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { useSession } from "@tanstack/react-start/server";
-import { createHash, timingSafeEqual } from "node:crypto";
-
-type AdminSession = { unlocked?: boolean };
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 /**
  * Demo defaults so the project also runs from a plain GitHub clone with no
@@ -11,18 +8,28 @@ type AdminSession = { unlocked?: boolean };
 const DEFAULT_ADMIN_PASSWORD = "Launchline2026!";
 const DEFAULT_SESSION_SECRET = "launchline-demo-session-secret-key-32chars";
 
-function sessionConfig() {
-  return {
-    password: process.env["SESSION_SECRET"] || DEFAULT_SESSION_SECRET,
-    name: "sd-admin",
-    maxAge: 60 * 60 * 8,
-    cookie: {
-      httpOnly: true,
-      secure: process.env["NODE_ENV"] === "production",
-      sameSite: "lax" as const,
-      path: "/",
-    },
-  };
+const TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+
+function secret() {
+  return process.env["SESSION_SECRET"] || DEFAULT_SESSION_SECRET;
+}
+
+function sign(payload: string) {
+  return createHmac("sha256", secret()).update(payload).digest("hex");
+}
+
+function issueToken() {
+  const payload = String(Date.now() + TOKEN_TTL_MS);
+  return `${payload}.${sign(payload)}`;
+}
+
+function verifyToken(token: string) {
+  const [payload, signature] = String(token ?? "").split(".");
+  if (!payload || !signature) return false;
+  const expected = sign(payload);
+  if (signature.length !== expected.length) return false;
+  if (!timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return false;
+  return Number(payload) > Date.now();
 }
 
 function matches(input: string, expected: string) {
@@ -31,10 +38,8 @@ function matches(input: string, expected: string) {
   return timingSafeEqual(a, b);
 }
 
-async function requireAdmin() {
-  const session = await useSession<AdminSession>(sessionConfig());
-  if (!session.data.unlocked) throw new Error("Unauthorized");
-  return session;
+function requireAdmin(token: string) {
+  if (!verifyToken(token)) throw new Error("Unauthorized");
 }
 
 export type ContactMessage = {
