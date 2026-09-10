@@ -89,42 +89,36 @@ export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => ({ password: String(data?.password ?? "") }))
   .handler(async ({ data }) => {
     const expected = process.env["ADMIN_PASSWORD"] || DEFAULT_ADMIN_PASSWORD;
-    if (!data.password || !matches(data.password, expected)) return { ok: false as const };
-    const session = await useSession<AdminSession>(sessionConfig());
-    await session.update({ unlocked: true });
-    return { ok: true as const };
+    if (!data.password || !matches(data.password, expected)) return { ok: false as const, token: "" };
+    return { ok: true as const, token: issueToken() };
   });
 
-export const adminLogout = createServerFn({ method: "POST" }).handler(async () => {
-  const session = await useSession<AdminSession>(sessionConfig());
-  await session.clear();
-  return { ok: true as const };
-});
+export const adminStatus = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => ({ unlocked: verifyToken(data.token) }));
 
-export const adminStatus = createServerFn({ method: "GET" }).handler(async () => {
-  const session = await useSession<AdminSession>(sessionConfig());
-  return { unlocked: session.data.unlocked === true };
-});
-
-export const listContactMessages = createServerFn({ method: "GET" }).handler(async () => {
-  await requireAdmin();
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin
-    .from("contact_messages")
-    .select("id, name, email, phone, service, message, is_read, created_at")
-    .order("created_at", { ascending: false })
-    .limit(200);
-  if (error) throw new Error("Could not load messages.");
-  return (data ?? []) as ContactMessage[];
-});
+export const listContactMessages = createServerFn({ method: "POST" })
+  .inputValidator((data: { token: string }) => ({ token: String(data?.token ?? "") }))
+  .handler(async ({ data }) => {
+    requireAdmin(data.token);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows, error } = await supabaseAdmin
+      .from("contact_messages")
+      .select("id, name, email, phone, service, message, is_read, created_at")
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Error("Could not load messages.");
+    return (rows ?? []) as ContactMessage[];
+  });
 
 export const setMessageRead = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string; isRead: boolean }) => ({
+  .inputValidator((data: { token: string; id: string; isRead: boolean }) => ({
+    token: String(data?.token ?? ""),
     id: String(data?.id ?? ""),
     isRead: Boolean(data?.isRead),
   }))
   .handler(async ({ data }) => {
-    await requireAdmin();
+    requireAdmin(data.token);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
       .from("contact_messages")
