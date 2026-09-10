@@ -4,9 +4,16 @@ import { createHash, timingSafeEqual } from "node:crypto";
 
 type AdminSession = { unlocked?: boolean };
 
+/**
+ * Demo defaults so the project also runs from a plain GitHub clone with no
+ * environment variables configured. Hosted environments override these.
+ */
+const DEFAULT_ADMIN_PASSWORD = "Launchline2026!";
+const DEFAULT_SESSION_SECRET = "launchline-demo-session-secret-key-32chars";
+
 function sessionConfig() {
   return {
-    password: process.env["SESSION_SECRET"]!,
+    password: process.env["SESSION_SECRET"] || DEFAULT_SESSION_SECRET,
     name: "sd-admin",
     maxAge: 60 * 60 * 8,
     cookie: {
@@ -76,8 +83,7 @@ export const submitContactMessage = createServerFn({ method: "POST" })
 export const adminLogin = createServerFn({ method: "POST" })
   .inputValidator((data: { password: string }) => ({ password: String(data?.password ?? "") }))
   .handler(async ({ data }) => {
-    const expected = process.env["ADMIN_PASSWORD"];
-    if (!expected) throw new Error("Admin password is not configured.");
+    const expected = process.env["ADMIN_PASSWORD"] || DEFAULT_ADMIN_PASSWORD;
     if (!data.password || !matches(data.password, expected)) return { ok: false as const };
     const session = await useSession<AdminSession>(sessionConfig());
     await session.update({ unlocked: true });
