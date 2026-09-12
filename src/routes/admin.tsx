@@ -231,7 +231,7 @@ function Inboxes({ token, onLockedOut }: { token: string; onLockedOut: () => voi
                     type="button"
                     className="btn-outline"
                     onClick={async () => {
-                      await markRead({ data: { id: m.id, isRead: !m.is_read } });
+                      await markRead({ data: { token, id: m.id, isRead: !m.is_read } });
                       void refresh();
                     }}
                   >
