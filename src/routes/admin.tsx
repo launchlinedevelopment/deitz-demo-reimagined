@@ -28,16 +28,29 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [token, setToken] = useState("");
   const [ready, setReady] = useState(false);
   const status = useServerFn(adminStatus);
 
   useEffect(() => {
-    status()
-      .then((r) => setUnlocked(r.unlocked))
-      .catch(() => setUnlocked(false))
+    const stored = sessionStorage.getItem(TOKEN_KEY) ?? "";
+    if (!stored) {
+      setReady(true);
+      return;
+    }
+    status({ data: { token: stored } })
+      .then((r) => {
+        if (r.unlocked) setToken(stored);
+        else sessionStorage.removeItem(TOKEN_KEY);
+      })
+      .catch(() => sessionStorage.removeItem(TOKEN_KEY))
       .finally(() => setReady(true));
   }, [status]);
+
+  function signOut() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    setToken("");
+  }
 
   return (
     <>
