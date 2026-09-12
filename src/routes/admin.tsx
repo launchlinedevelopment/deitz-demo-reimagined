@@ -61,10 +61,15 @@ function AdminPage() {
       />
       {!ready ? (
         <div className="container-page section-y text-muted-foreground">Loading…</div>
-      ) : unlocked ? (
-        <Inboxes onLockedOut={() => setUnlocked(false)} />
+      ) : token ? (
+        <Inboxes token={token} onLockedOut={signOut} />
       ) : (
-        <AdminLogin onUnlocked={() => setUnlocked(true)} />
+        <AdminLogin
+          onUnlocked={(t) => {
+            sessionStorage.setItem(TOKEN_KEY, t);
+            setToken(t);
+          }}
+        />
       )}
     </>
   );
