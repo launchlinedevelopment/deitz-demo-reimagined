@@ -185,10 +185,7 @@ function Inboxes({ token, onLockedOut }: { token: string; onLockedOut: () => voi
           <button
             type="button"
             className="btn-outline"
-            onClick={async () => {
-              await logout();
-              onLockedOut();
-            }}
+            onClick={() => onLockedOut()}
           >
             <LogOut aria-hidden="true" className="mr-2 inline h-4 w-4" />
             Sign Out
