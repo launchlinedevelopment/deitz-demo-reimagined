@@ -75,7 +75,7 @@ function AdminPage() {
   );
 }
 
-function AdminLogin({ onUnlocked }: { onUnlocked: () => void }) {
+function AdminLogin({ onUnlocked }: { onUnlocked: (token: string) => void }) {
   const login = useServerFn(adminLogin);
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
