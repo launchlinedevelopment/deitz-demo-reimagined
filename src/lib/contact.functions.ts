@@ -129,9 +129,12 @@ export const setMessageRead = createServerFn({ method: "POST" })
   });
 
 export const deleteContactMessage = createServerFn({ method: "POST" })
-  .inputValidator((data: { id: string }) => ({ id: String(data?.id ?? "") }))
+  .inputValidator((data: { token: string; id: string }) => ({
+    token: String(data?.token ?? ""),
+    id: String(data?.id ?? ""),
+  }))
   .handler(async ({ data }) => {
-    await requireAdmin();
+    requireAdmin(data.token);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("contact_messages").delete().eq("id", data.id);
     if (error) throw new Error("Could not delete the message.");
