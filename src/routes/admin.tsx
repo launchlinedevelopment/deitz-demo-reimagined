@@ -86,7 +86,7 @@ function AdminLogin({ onUnlocked }: { onUnlocked: (token: string) => void }) {
     setBusy(true);
     try {
       const result = await login({ data: { password: value } });
-      if (result.ok) onUnlocked();
+      if (result.ok) onUnlocked(result.token);
       else {
         setError("Incorrect administrator password.");
         setValue("");
