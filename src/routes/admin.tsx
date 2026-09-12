@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Inbox, Lock, LogOut, Mail, Phone, RefreshCw, Trash2 } from "lucide-react";
 import {
   adminLogin,
-  adminLogout,
   adminStatus,
   deleteContactMessage,
   listContactMessages,
   setMessageRead,
   type ContactMessage,
 } from "@/lib/contact.functions";
+
+const TOKEN_KEY = "sd-admin-token";
 import { PageHero } from "@/components/site/PageHero";
 
 export const Route = createFileRoute("/admin")({
@@ -27,16 +28,29 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminPage() {
-  const [unlocked, setUnlocked] = useState(false);
+  const [token, setToken] = useState("");
   const [ready, setReady] = useState(false);
   const status = useServerFn(adminStatus);
 
   useEffect(() => {
-    status()
-      .then((r) => setUnlocked(r.unlocked))
-      .catch(() => setUnlocked(false))
+    const stored = sessionStorage.getItem(TOKEN_KEY) ?? "";
+    if (!stored) {
+      setReady(true);
+      return;
+    }
+    status({ data: { token: stored } })
+      .then((r) => {
+        if (r.unlocked) setToken(stored);
+        else sessionStorage.removeItem(TOKEN_KEY);
+      })
+      .catch(() => sessionStorage.removeItem(TOKEN_KEY))
       .finally(() => setReady(true));
   }, [status]);
+
+  function signOut() {
+    sessionStorage.removeItem(TOKEN_KEY);
+    setToken("");
+  }
 
   return (
     <>
@@ -47,16 +61,21 @@ function AdminPage() {
       />
       {!ready ? (
         <div className="container-page section-y text-muted-foreground">Loading…</div>
-      ) : unlocked ? (
-        <Inboxes onLockedOut={() => setUnlocked(false)} />
+      ) : token ? (
+        <Inboxes token={token} onLockedOut={signOut} />
       ) : (
-        <AdminLogin onUnlocked={() => setUnlocked(true)} />
+        <AdminLogin
+          onUnlocked={(t) => {
+            sessionStorage.setItem(TOKEN_KEY, t);
+            setToken(t);
+          }}
+        />
       )}
     </>
   );
 }
 
-function AdminLogin({ onUnlocked }: { onUnlocked: () => void }) {
+function AdminLogin({ onUnlocked }: { onUnlocked: (token: string) => void }) {
   const login = useServerFn(adminLogin);
   const [value, setValue] = useState("");
   const [error, setError] = useState("");
@@ -67,7 +86,7 @@ function AdminLogin({ onUnlocked }: { onUnlocked: () => void }) {
     setBusy(true);
     try {
       const result = await login({ data: { password: value } });
-      if (result.ok) onUnlocked();
+      if (result.ok) onUnlocked(result.token);
       else {
         setError("Incorrect administrator password.");
         setValue("");
@@ -120,11 +139,10 @@ function AdminLogin({ onUnlocked }: { onUnlocked: () => void }) {
   );
 }
 
-function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
+function Inboxes({ token, onLockedOut }: { token: string; onLockedOut: () => void }) {
   const list = useServerFn(listContactMessages);
   const markRead = useServerFn(setMessageRead);
   const remove = useServerFn(deleteContactMessage);
-  const logout = useServerFn(adminLogout);
 
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -133,7 +151,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      setMessages(await list());
+      setMessages(await list({ data: { token } }));
       setError("");
     } catch {
       setError("Could not load messages. Your session may have expired.");
@@ -141,7 +159,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, [list, onLockedOut]);
+  }, [list, onLockedOut, token]);
 
   useEffect(() => {
     void refresh();
@@ -167,10 +185,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
           <button
             type="button"
             className="btn-outline"
-            onClick={async () => {
-              await logout();
-              onLockedOut();
-            }}
+            onClick={() => onLockedOut()}
           >
             <LogOut aria-hidden="true" className="mr-2 inline h-4 w-4" />
             Sign Out
@@ -216,7 +231,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
                     type="button"
                     className="btn-outline"
                     onClick={async () => {
-                      await markRead({ data: { id: m.id, isRead: !m.is_read } });
+                      await markRead({ data: { token, id: m.id, isRead: !m.is_read } });
                       void refresh();
                     }}
                   >
@@ -226,7 +241,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
                     type="button"
                     className="btn-outline"
                     onClick={async () => {
-                      await remove({ data: { id: m.id } });
+                      await remove({ data: { token, id: m.id } });
                       void refresh();
                     }}
                     aria-label={`Delete message from ${m.name}`}
