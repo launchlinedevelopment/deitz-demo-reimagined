@@ -241,7 +241,7 @@ function Inboxes({ token, onLockedOut }: { token: string; onLockedOut: () => voi
                     type="button"
                     className="btn-outline"
                     onClick={async () => {
-                      await remove({ data: { id: m.id } });
+                      await remove({ data: { token, id: m.id } });
                       void refresh();
                     }}
                     aria-label={`Delete message from ${m.name}`}
