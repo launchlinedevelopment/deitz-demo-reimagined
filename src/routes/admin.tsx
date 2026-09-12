@@ -139,11 +139,10 @@ function AdminLogin({ onUnlocked }: { onUnlocked: (token: string) => void }) {
   );
 }
 
-function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
+function Inboxes({ token, onLockedOut }: { token: string; onLockedOut: () => void }) {
   const list = useServerFn(listContactMessages);
   const markRead = useServerFn(setMessageRead);
   const remove = useServerFn(deleteContactMessage);
-  const logout = useServerFn(adminLogout);
 
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loading, setLoading] = useState(true);
@@ -152,7 +151,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      setMessages(await list());
+      setMessages(await list({ data: { token } }));
       setError("");
     } catch {
       setError("Could not load messages. Your session may have expired.");
@@ -160,7 +159,7 @@ function Inboxes({ onLockedOut }: { onLockedOut: () => void }) {
     } finally {
       setLoading(false);
     }
-  }, [list, onLockedOut]);
+  }, [list, onLockedOut, token]);
 
   useEffect(() => {
     void refresh();
