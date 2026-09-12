@@ -4,13 +4,14 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Inbox, Lock, LogOut, Mail, Phone, RefreshCw, Trash2 } from "lucide-react";
 import {
   adminLogin,
-  adminLogout,
   adminStatus,
   deleteContactMessage,
   listContactMessages,
   setMessageRead,
   type ContactMessage,
 } from "@/lib/contact.functions";
+
+const TOKEN_KEY = "sd-admin-token";
 import { PageHero } from "@/components/site/PageHero";
 
 export const Route = createFileRoute("/admin")({
